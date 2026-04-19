@@ -49,10 +49,19 @@ static const char *TAG = "main";
 
 // Hardware handles
 ch422g_handle_t s_ch422g = NULL;
+
+#ifndef CONFIG_HEADLESS_MODE
 esp_lcd_panel_handle_t s_lcd_panel = NULL;
 esp_lcd_touch_handle_t s_touch = NULL;
+#endif
+
+#ifdef CONFIG_SD_CARD_ENABLED
 static waveshare_sd_handle_t s_sd_card = NULL;
 static bool s_sd_card_ok = false;
+#else
+static waveshare_sd_handle_t s_little_fs = NULL;
+static bool s_little_fs_ok = false;
+#endif
 
 /**
  * @brief Initialize I2C master bus
@@ -123,6 +132,8 @@ static esp_err_t init_hardware(void)
         .max_files = 5,
         .format_if_mount_failed = false,
     };
+    
+#ifndef CONFIG_HEADLESS_MODE
     ret = waveshare_sd_init(&sd_config, &s_sd_card);
     if (ret != ESP_OK) {
         ESP_LOGW(TAG, "Failed to initialize SD card: %s", esp_err_to_name(ret));
@@ -132,7 +143,12 @@ static esp_err_t init_hardware(void)
         ESP_LOGI(TAG, "SD Card initialized successfully");
         s_sd_card_ok = true;
     }
+#else
+    ESP_LOGW(TAG, "HEADLESS_MODE: Skipping SD card");
+    ret = ESP_OK;
+#endif
 
+#ifndef CONFIG_HEADLESS_MODE
     ESP_LOGI(TAG, "Step 4: Initializing LCD Panel...");
     // 4. Initialize LCD Panel
     waveshare_lcd_config_t lcd_config = {
@@ -164,6 +180,11 @@ static esp_err_t init_hardware(void)
         return ret;
     }
     ESP_LOGI(TAG, "Touch Controller initialized successfully");
+#else
+    // Headless mode on Nano ESP32
+    ESP_LOGW(TAG, "HEADLESS_MODE: Skipping LCD initialization");
+    ret = ESP_OK;
+#endif
 
     ESP_LOGI(TAG, "Hardware initialization complete");
     return ESP_OK;
@@ -174,14 +195,22 @@ static esp_err_t init_hardware(void)
  */
 static void ensure_scenes_json_exists(void)
 {
+#ifndef CONFIG_SD_CARD_ENABLED
+    const char *scenes_path = "/littlefs/scenes.json";   // or wherever you put it in LittleFS
+#else
     const char *scenes_path = "/sdcard/scenes.json";
-    
+#endif  
     // Check if file exists
     struct stat st;
     if (stat(scenes_path, &st) == 0) {
         ESP_LOGI(TAG, "scenes.json found (%ld bytes)", st.st_size);
         return;
     }
+#ifndef CONFIG_SD_CARD_ENABLED
+    ESP_LOGW(TAG, "SD_CARD_DISABLED: Skipping SD card search for scenes.json");
+    ESP_LOGW(TAG, "SD_CARD_DISABLED: Using internal LittleFS instead of SD card");
+    // TODO: Initialize LittleFS here (we'll add this soon)
+#endif
     
     ESP_LOGI(TAG, "scenes.json not found, creating default file...");
     
@@ -421,6 +450,7 @@ static void lighting_task(void *arg)
     }
 }
 
+#ifndef CONFIG_HEADLESS_MODE
 /**
  * @brief Show SD card missing error screen
  * 
@@ -491,6 +521,7 @@ static void show_sd_card_error_screen(void)
         ESP_LOGW(TAG, "SD Card missing - please insert card and restart device");
     }
 }
+#endif
 
 /**
  * @brief Application entry point
@@ -532,7 +563,9 @@ void app_main(void)
         
         // Try to read node ID from SD, fall back to default if not available
         uint64_t bootloader_node_id = LCC_DEFAULT_NODE_ID;
-        if (ret == ESP_OK) {
+        if (ret == ESP_OK)
+#ifndef CONFIG_HEADLESS_MODE
+        {
             waveshare_sd_config_t sd_config = {
                 .mosi_gpio = CONFIG_SD_MOSI_GPIO,
                 .miso_gpio = CONFIG_SD_MISO_GPIO,
@@ -549,6 +582,10 @@ void app_main(void)
                     bootloader_node_id = LCC_DEFAULT_NODE_ID;
                 }
             }
+        }
+#endif
+        {
+        ESP_LOGW(TAG, "HEADLESS_MODE: Skipping SD card");
         }
         
         // Run bootloader (does not return - reboots when done)
@@ -586,21 +623,29 @@ void app_main(void)
             ESP_LOGE(TAG, "Hardware init failed - system halted");
         }
     }
-
+#ifndef CONFIG_HEADLESS_MODE
     // Check if SD card is present - show error screen if not
     if (!s_sd_card_ok) {
         show_sd_card_error_screen();
         // This function never returns
     }
+#else
+    ESP_LOGW(TAG, "HEADLESS_MODE: Skipping SD card");
+#endif
 
     // Ensure scenes.json exists (create default if not)
     ensure_scenes_json_exists();
-    
+ 
+#ifndef CONFIG_HEADLESS_MODE
     // Display splash image from SD card (FAT uses 8.3 filenames)
     ret = load_and_display_image(s_lcd_panel, "/sdcard/SPLASH.JPG");
     if (ret != ESP_OK) {
         ESP_LOGW(TAG, "No splash image found, continuing without splash");
     }
+#else
+    ESP_LOGW(TAG, "HEADLESS_MODE: Skipping display of splash image");
+    ret = ESP_OK;
+#endif
 
     // Show splash for specified duration (FR-001: within 1500ms)
     vTaskDelay(pdMS_TO_TICKS(3000));

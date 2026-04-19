@@ -127,5 +127,8 @@ bool waveshare_touch_get_xy(
         return false;
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return esp_lcd_touch_get_coordinates(touch_handle, x, y, strength, num_points, max_points);
+#pragma GCC diagnostic pop
 }

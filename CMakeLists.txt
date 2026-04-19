@@ -1,17 +1,24 @@
-# The following five lines of boilerplate have to be in your project's
-# CMakeLists in this exact order for cmake to work correctly
+# The following lines must be in this exact order
 cmake_minimum_required(VERSION 3.16)
 
-# Set C++ standard globally for GCC 14.x compatibility with ESP-IDF newlib
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # =============================================================================
-# FORCE HEADLESS MODE (no display, no SD card, no touch)
+# Build configuration defines
 # =============================================================================
-# This disables all RGB LCD / touch / SD code so the project builds on the
-# Arduino Nano ESP32. Change to =0 when you want full hardware support later.
+# Force headless mode (no display / touch)
 add_compile_definitions(CONFIG_HEADLESS_MODE=1)
+
+# Enable / disable SD card (set to 0 to use internal LittleFS instead)
+add_compile_definitions(CONFIG_SD_CARD_ENABLED=0)
+
+# LittleFS support — we will enable the component properly below
+# (the if() block you had was in the wrong place)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(LCCLightingTouchscreen)
+
+# LittleFS is already included in ESP-IDF v5.1 — no need for EXTRA_COMPONENT_DIRS
+# We will enable it via REQUIRES in the component that uses it (or in main)
