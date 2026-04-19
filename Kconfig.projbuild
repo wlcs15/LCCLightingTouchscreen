@@ -1,0 +1,10 @@
+menu "LCC Lighting Touchscreen Configuration"
+
+    config HEADLESS_MODE
+        bool "Headless mode (no display, no SD card, no touch)"
+        default n
+        help
+            Build without RGB parallel LCD, touch controller, and SD card support.
+            Useful for Arduino Nano ESP32 or boards without enough pins for the parallel display.
+
+endmenu
