@@ -372,7 +372,13 @@ static esp_err_t load_and_display_image(esp_lcd_panel_handle_t panel, const char
     
     // Get framebuffer
     void *fb0 = NULL;
+#ifndef CONFIG_HEADLESS_MODE
     ret = esp_lcd_rgb_panel_get_frame_buffer(panel, 1, &fb0);
+#else
+        ESP_LOGW(TAG, "HEADLESS_MODE: Skipping frame buffer access");
+    fb0 = NULL;
+    ret = ESP_OK;
+#endif
     if (ret != ESP_OK || fb0 == NULL) {
         ESP_LOGE(TAG, "Failed to get framebuffer");
         free(out_buf);
