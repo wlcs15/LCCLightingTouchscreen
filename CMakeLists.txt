@@ -6,5 +6,12 @@ cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# =============================================================================
+# FORCE HEADLESS MODE (no display, no SD card, no touch)
+# =============================================================================
+# This disables all RGB LCD / touch / SD code so the project builds on the
+# Arduino Nano ESP32. Change to =0 when you want full hardware support later.
+add_compile_definitions(CONFIG_HEADLESS_MODE=1)
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(LCCLightingTouchscreen)
