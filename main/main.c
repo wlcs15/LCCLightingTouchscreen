@@ -13,6 +13,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "fs_config.h"
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_check.h"
@@ -51,8 +52,11 @@ static const char *TAG = "main";
 ch422g_handle_t s_ch422g = NULL;
 
 #ifndef CONFIG_HEADLESS_MODE
-esp_lcd_panel_handle_t s_lcd_panel = NULL;
-esp_lcd_touch_handle_t s_touch = NULL;
+static esp_lcd_panel_handle_t s_lcd_panel = NULL;
+static waveshare_touch_handle_t s_touch = NULL;
+#else
+static void *s_lcd_panel = NULL;           // dummy for headless
+static void *s_touch = NULL;               // dummy for headless
 #endif
 
 #ifdef CONFIG_SD_CARD_ENABLED
@@ -198,7 +202,7 @@ static void ensure_scenes_json_exists(void)
 #ifndef CONFIG_SD_CARD_ENABLED
     const char *scenes_path = "/littlefs/scenes.json";   // or wherever you put it in LittleFS
 #else
-    const char *scenes_path = "/sdcard/scenes.json";
+    const char *scenes_path = "SCENES_PATH";
 #endif  
     // Check if file exists
     struct stat st;
@@ -644,7 +648,7 @@ void app_main(void)
  
 #ifndef CONFIG_HEADLESS_MODE
     // Display splash image from SD card (FAT uses 8.3 filenames)
-    ret = load_and_display_image(s_lcd_panel, "/sdcard/SPLASH.JPG");
+    ret = load_and_display_image(s_lcd_panel, "SPLASH_PATH ");
     if (ret != ESP_OK) {
         ESP_LOGW(TAG, "No splash image found, continuing without splash");
     }
@@ -657,7 +661,7 @@ void app_main(void)
     vTaskDelay(pdMS_TO_TICKS(3000));
 
     // Initialize LCC/OpenMRN (FR-002)
-    // This reads node ID from /sdcard/nodeid.txt and initializes TWAI
+    // This reads node ID from NODEID_PATH and initializes TWAI
     ESP_LOGI(TAG, "Initializing LCC/OpenMRN...");
     lcc_config_t lcc_cfg = LCC_CONFIG_DEFAULT();
     ret = lcc_node_init(&lcc_cfg);

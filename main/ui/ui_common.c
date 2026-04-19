@@ -129,6 +129,7 @@ static void lvgl_task(void *arg)
  */
 esp_err_t ui_init(lv_disp_t **disp, lv_indev_t **touch_indev)
 {
+#ifndef CONFIG_HEADLESS_MODE
     ESP_RETURN_ON_FALSE(disp != NULL, ESP_ERR_INVALID_ARG, TAG, "disp is NULL");
     ESP_RETURN_ON_FALSE(touch_indev != NULL, ESP_ERR_INVALID_ARG, TAG, "touch_indev is NULL");
     
@@ -205,6 +206,10 @@ esp_err_t ui_init(lv_disp_t **disp, lv_indev_t **touch_indev)
     *touch_indev = s_touch_indev;
 
     ESP_LOGI(TAG, "LVGL initialized successfully");
+#else
+    ESP_LOGW(TAG, "HEADLESS_MODE: Skipping UI / display initialization");
+    // Optionally initialize a minimal LVGL setup without display if needed
+#endif
     return ESP_OK;
 }
 

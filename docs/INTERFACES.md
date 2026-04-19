@@ -62,7 +62,7 @@ Write `0x01` to address `0x24` to set output mode.
 | File | Purpose |
 |------|---------|
 | `/sdcard/nodeid.txt` | LCC Node ID (plain text, dotted hex) |
-| `/sdcard/scenes.json` | Scene definitions (auto-created if missing) |
+| `SCENES_PATH` | Scene definitions (auto-created if missing) |
 | `/sdcard/splash.jpg` | Boot splash image |
 | `/sdcard/openmrn_config` | OpenMRN persistent config (auto-created) |
 

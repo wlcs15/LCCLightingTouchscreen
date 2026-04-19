@@ -16,6 +16,7 @@
 extern "C" {
 #endif
 
+#include "fs_config.h"
 #include "esp_err.h"
 #include <stdint.h>
 #include <stdbool.h>
@@ -52,8 +53,8 @@ typedef struct {
  * @brief Default LCC configuration
  */
 #define LCC_CONFIG_DEFAULT() { \
-    .nodeid_path = "/sdcard/nodeid.txt", \
-    .config_path = "/sdcard/lcc_config.bin", \
+    .nodeid_path = "NODEID_PATH", \
+    .config_path = "LCC_CONFIG_PATH", \
     .twai_rx_gpio = 16, \
     .twai_tx_gpio = 15, \
 }

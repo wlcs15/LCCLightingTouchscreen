@@ -3,6 +3,7 @@
  * @brief Scene storage implementation - load/save scenes from/to SD card
  */
 
+#include "fs_config.h"
 #include "scene_storage.h"
 #include "cJSON.h"
 #include "esp_log.h"
@@ -54,11 +55,11 @@ esp_err_t scene_storage_load(ui_scene_t *scenes, size_t max_count, size_t *out_c
     
     if (stat(SCENE_STORAGE_PATH, &st) != 0) {
         // Try fallback to .tmp file (from previous failed atomic write)
-        if (stat("/sdcard/scenes.tmp", &st) == 0) {
-            file_path = "/sdcard/scenes.tmp";
+        if (stat("SCENES_TMP_PATH", &st) == 0) {
+            file_path = "SCENES_TMP_PATH";
             ESP_LOGW(TAG, "Using fallback scenes.tmp");
             // Try to fix it by renaming
-            rename("/sdcard/scenes.tmp", SCENE_STORAGE_PATH);
+            rename("SCENES_TMP_PATH", SCENE_STORAGE_PATH);
         } else {
             ESP_LOGW(TAG, "scenes.json not found");
             return ESP_ERR_NOT_FOUND;

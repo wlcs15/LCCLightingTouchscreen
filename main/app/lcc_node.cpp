@@ -9,7 +9,7 @@
  * @see docs/ARCHITECTURE.md §5 for OpenMRN Integration
  * @see docs/SPEC.md FR-002 for initialization requirements
  */
-
+#include "fs_config.h"
 #include "lcc_node.h"
 #include "lcc_config.hxx"
 #include "bootloader_hal.h"
@@ -339,7 +339,7 @@ static LccConfigListener *s_config_listener = nullptr;
 } // anonymous namespace
 
 /// Path to the configuration file on SD card
-static const char LCC_CONFIG_FILE[] = "/sdcard/openmrn_config";
+//static const char *LCC_CONFIG_FILE = LCC_CONFIG_PATH;
 
 // ============================================================================
 // OpenMRN required external symbols
@@ -418,14 +418,14 @@ const char CDI_DATA[] =
 </cdi>)xmldata";
 
 /// Configuration file path
-const char *const CONFIG_FILENAME = LCC_CONFIG_FILE;
+const char *const CONFIG_FILENAME = LCC_CONFIG_PATH;
 
 /// Size of the configuration file (computed from ConfigDef layout)
 /// ConfigDef::size() gives the total size, offset() isn't static so we use a fixed value
 const size_t CONFIG_FILE_SIZE = ConfigDef::size() + 128;
 
 /// SNIP user data file (same as config file)
-const char *const SNIP_DYNAMIC_FILENAME = LCC_CONFIG_FILE;
+const char *const SNIP_DYNAMIC_FILENAME = LCC_CONFIG_PATH;
 
 } // namespace openlcb
 

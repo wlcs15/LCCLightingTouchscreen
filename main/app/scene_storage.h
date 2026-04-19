@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "fs_config.h"
 #include "esp_err.h"
 #include "../ui/ui_common.h"
 #include <stdint.h>
@@ -15,7 +16,7 @@ extern "C" {
 #endif
 
 #define SCENE_STORAGE_MAX_SCENES    32
-#define SCENE_STORAGE_PATH          "/sdcard/scenes.json"
+#define SCENE_STORAGE_PATH          "SCENES_PATH"
 
 /**
  * @brief Initialize scene storage module
