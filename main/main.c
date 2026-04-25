@@ -59,7 +59,7 @@ static void *s_lcd_panel = NULL;           // dummy for headless
 static void *s_touch = NULL;               // dummy for headless
 #endif
 
-#ifdef CONFIG_SD_CARD_ENABLED
+#if CONFIG_SD_CARD_ENABLED
 static waveshare_sd_handle_t s_sd_card = NULL;
 static bool s_sd_card_ok = false;
 #else
@@ -199,10 +199,10 @@ static esp_err_t init_hardware(void)
  */
 static void ensure_scenes_json_exists(void)
 {
-#ifndef CONFIG_SD_CARD_ENABLED
-    const char *scenes_path = "/littlefs/scenes.json";   // or wherever you put it in LittleFS
-#else
+#if CONFIG_SD_CARD_ENABLED
     const char *scenes_path = "SCENES_PATH";
+#else
+    const char *scenes_path = "/littlefs/scenes.json";   // or wherever you put it in LittleFS
 #endif  
     // Check if file exists
     struct stat st;
@@ -210,7 +210,8 @@ static void ensure_scenes_json_exists(void)
         ESP_LOGI(TAG, "scenes.json found (%ld bytes)", st.st_size);
         return;
     }
-#ifndef CONFIG_SD_CARD_ENABLED
+#if CONFIG_SD_CARD_ENABLED
+#else
     ESP_LOGW(TAG, "SD_CARD_DISABLED: Skipping SD card search for scenes.json");
     ESP_LOGW(TAG, "SD_CARD_DISABLED: Using internal LittleFS instead of SD card");
     // TODO: Initialize LittleFS here (we'll add this soon)

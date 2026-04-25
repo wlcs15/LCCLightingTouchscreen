@@ -5,7 +5,7 @@
 
 #pragma once
 
-#ifdef CONFIG_SD_CARD_ENABLED
+#if CONFIG_SD_CARD_ENABLED
     #define BASE_FS_PATH     "/sdcard"
     #define FS_MOUNT_POINT   "/sdcard"
 #else
