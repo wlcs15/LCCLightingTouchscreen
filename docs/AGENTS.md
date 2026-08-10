@@ -1,5 +1,14 @@
 # Agent Operating Rules
 
+## Hardware USB debugging (user preference)
+
+**Target:** Waveshare ESP32-S3 Touch LCD 4.3" (this project).
+
+- **Default:** one USB-C cable on the **native USB** port (ESP32-S3 USB Serial/JTAG, `303a:1001` → `/dev/ttyACM*`). Enough for flash, monitor, and normal bring-up.
+- **Do not** leave both USB ports connected full-time "just in case" (wrong-port risk, renumbering noise).
+- **User request (2026-08-10):** Going forward, **ask Chuck to connect a second USB-C cable to the board UART port** when serial debugging would clearly benefit — e.g. full continuous boot logs without USB-JTAG disconnects mid-reset/touch-init, native ACM flaky or missing, flash unreliable on native USB, or intentional split of JTAG vs stable UART console.
+- Prefer `/dev/serial/by-id/usb-Espressif_*` for native USB; do not confuse with other ACM devices (e.g. STM32 VCP).
+
 ## Implementation Status
 
 | Component | Status | Notes |
