@@ -11,3 +11,6 @@ dependencies:
   
   # mDNS - required by OpenMRN
   espressif/mdns: "*"
+
+  # LittleFS for headless/nano mode
+  joltwallet/littlefs: "^1.21"

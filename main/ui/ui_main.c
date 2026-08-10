@@ -92,6 +92,10 @@ lv_obj_t* ui_get_scenes_tab(void)
  */
 void ui_show_main(void)
 {
+#ifdef CONFIG_HEADLESS_MODE
+    ESP_LOGW(TAG, "HEADLESS_MODE: Skipping full UI / display initialization");
+#else
     ESP_LOGI(TAG, "Showing main screen");
     ui_create_main_screen();
+#endif
 }

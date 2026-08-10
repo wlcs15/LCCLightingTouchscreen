@@ -17,6 +17,7 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_check.h"
+#include "esp_littlefs.h"
 #include "nvs_flash.h"
 #include "driver/i2c.h"
 #include "esp_heap_caps.h"
@@ -29,14 +30,20 @@
 #include "waveshare_touch.h"
 #include "waveshare_sd.h"
 
+#ifndef CONFIG_HEADLESS_MODE
 // UI
 #include "ui_common.h"
+#endif
 
 // App modules
 #include "app/scene_storage.h"
 #include "app/lcc_node.h"
+
+#ifndef CONFIG_HEADLESS_MODE
 #include "app/fade_controller.h"
 #include "app/screen_timeout.h"
+#endif
+
 #include "app/bootloader_hal.h"
 
 // For reset reason detection (FR-060)
@@ -86,6 +93,30 @@ static esp_err_t init_i2c(void)
     ESP_RETURN_ON_ERROR(i2c_param_config(I2C_NUM_0, &i2c_conf), TAG, "I2C param config failed");
     ESP_RETURN_ON_ERROR(i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0), TAG, "I2C driver install failed");
 
+    return ESP_OK;
+}
+
+/**
+ * @brief Mount LittleFS when in headless/nano mode
+ */
+static esp_err_t init_littlefs(void)
+{
+    ESP_LOGI(TAG, "Mounting LittleFS (partition 'storage')...");
+
+    esp_vfs_littlefs_conf_t conf = {
+        .base_path = "/littlefs",
+        .partition_label = "storage",           // matches partitions.csv
+        .format_if_mount_failed = true,         // auto-format on first boot
+        .dont_mount = false,
+    };
+
+    esp_err_t ret = esp_vfs_littlefs_register(&conf);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to mount LittleFS (%s)", esp_err_to_name(ret));
+        return ret;
+    }
+
+    ESP_LOGI(TAG, "LittleFS mounted successfully at /littlefs");
     return ESP_OK;
 }
 
@@ -148,7 +179,12 @@ static esp_err_t init_hardware(void)
         s_sd_card_ok = true;
     }
 #else
-    ESP_LOGW(TAG, "HEADLESS_MODE: Skipping SD card");
+    ESP_LOGW(TAG, "HEADLESS_MODE: Skipping SD card - using LittleFS instead");
+    ret = init_littlefs();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "LittleFS mount failed - config files cannot be created!");
+    }
+    // We still want hardware init to continue
     ret = ESP_OK;
 #endif
 
@@ -214,7 +250,6 @@ static void ensure_scenes_json_exists(void)
 #else
     ESP_LOGW(TAG, "SD_CARD_DISABLED: Skipping SD card search for scenes.json");
     ESP_LOGW(TAG, "SD_CARD_DISABLED: Using internal LittleFS instead of SD card");
-    // TODO: Initialize LittleFS here (we'll add this soon)
 #endif
     
     ESP_LOGI(TAG, "scenes.json not found, creating default file...");
@@ -438,6 +473,7 @@ static TaskHandle_t s_lighting_task = NULL;
 /// Lighting task tick interval (ms) - 10ms for smooth fade interpolation
 #define LIGHTING_TASK_INTERVAL_MS  10
 
+#ifndef CONFIG_HEADLESS_MODE
 /**
  * @brief Lighting control task
  * 
@@ -461,7 +497,6 @@ static void lighting_task(void *arg)
     }
 }
 
-#ifndef CONFIG_HEADLESS_MODE
 /**
  * @brief Show SD card missing error screen
  * 
@@ -676,6 +711,7 @@ void app_main(void)
                  (unsigned long long)lcc_node_get_base_event_id());
     }
 
+#ifndef CONFIG_HEADLESS_MODE
     // Initialize screen timeout module (power saving)
     ESP_LOGI(TAG, "Initializing screen timeout...");
     screen_timeout_config_t screen_timeout_cfg = {
@@ -735,6 +771,9 @@ void app_main(void)
     ESP_LOGI(TAG, "Showing main UI...");
     ui_show_main();
     ESP_LOGI(TAG, "Main UI displayed");
+#else
+    ESP_LOGW(TAG, "HEADLESS_MODE: Skipping display-related initialization (screen timeout, fade controller, LVGL, UI)");
+#endif
 
     // Load scenes from SD card and populate Scene Selector tab
     ESP_LOGI(TAG, "Loading scenes from SD card...");
@@ -801,10 +840,16 @@ void app_main(void)
         // Report status every 10 seconds
         if ((xTaskGetTickCount() - last_status_tick) >= pdMS_TO_TICKS(10000)) {
             last_status_tick = xTaskGetTickCount();
-            ESP_LOGI(TAG, "Status - Free heap: %lu bytes, LCC: %s, Screen: %s", 
-                     esp_get_free_heap_size(),
-                     lcc_node_get_status() == LCC_STATUS_RUNNING ? "running" : "not running",
-                     screen_timeout_is_screen_on() ? "on" : "off");
+#ifndef CONFIG_HEADLESS_MODE
+            ESP_LOGI(TAG, "Status - Free heap: %lu bytes, LCC: %s, Screen: %s",
+             esp_get_free_heap_size(),
+             lcc_node_is_running() ? "running" : "stopped",
+             screen_timeout_is_screen_on() ? "on" : "off");
+#else
+            ESP_LOGI(TAG, "Status - Free heap: %lu bytes, LCC: %s (HEADLESS)",
+             esp_get_free_heap_size(),
+             lcc_node_is_running() ? "running" : "stopped");
+#endif
         }
     }
 }
