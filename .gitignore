@@ -79,3 +79,7 @@ Desktop.ini
 examples/
 Firmware/
 .vscode/settings.json
+
+# Local dual-IDF verification archives / agent rebuild logs (not source)
+build-prior-*.tar.gz
+/logs/
