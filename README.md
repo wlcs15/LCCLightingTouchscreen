@@ -2,6 +2,8 @@
 
 An ESP32-S3–based LCC/OpenLCB lighting scene controller with a touch LCD user interface for model railroad layout lighting control. Designed specifically to interface with my [LCC Lighting Controller](https://github.com/vsi5004/LCCLightingController)
 
+On this house laptop, identify USB by `/dev/serial/by-id/`, not `ttyACM*` order. RR-CirKits gateway: `usb-STMicroelectronics_STM32_Virtual_ComPort_209737A73931-if00` (`0483:5740`, JMRI CAN @ 57600 — do not flash). Mega: `usb-Arduino__www.arduino.cc__0042_85036313230351A00280-if00` (`2341:0042`). This S3 panel: Espressif `303a:1001` `usb-Espressif_USB_JTAG_serial_debug_unit_*` — hold BOOT and replug native USB-C if it drops. Two CH340 D1 R32 boards share VID:PID; use MAC.
+
 
 ![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.1.6-blue)
 ![License](https://img.shields.io/badge/license-BSD--2--Clause-green)
