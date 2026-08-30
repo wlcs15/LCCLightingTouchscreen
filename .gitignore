@@ -83,3 +83,9 @@ Firmware/
 # Local dual-IDF verification archives / agent rebuild logs (not source)
 build-prior-*.tar.gz
 /logs/
+
+# Local session resume notes (not for GitHub)
+How-To-Resume.txt
+How-To-Resume_this_GROK_session.txt
+RESUME.txt
+local/
